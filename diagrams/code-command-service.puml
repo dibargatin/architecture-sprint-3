@@ -1,0 +1,60 @@
+@startuml
+
+
+abstract class Message {
+    +Guid id
+    +DateTime createdAt
+    +Device targetDevice
+}
+abstract class Command extends Message {
+    +String commandKey   
+}
+
+Message *-- Device
+class Device {
+    +Guid id
+    +String uri
+}
+
+abstract class Result extends Message {
+    +Guid commandId
+}
+abstract class Success extends Result
+abstract class Failure extends Result
+class Error extends Failure {
+    +String reason
+}
+
+interface ICommandStrategy {
+    Result Execute(Command)
+}
+
+class GetTemperatureCommand extends Command
+class GetTemperatureSuccess extends Success {
+    +double temperature
+}
+class GetTemperatureStrategy implements ICommandStrategy {
+    Result Execute(GetTemperatureCommand)
+}
+GetTemperatureCommand <-- GetTemperatureStrategy: use
+GetTemperatureSuccess <-- GetTemperatureStrategy: create
+Error <-- GetTemperatureStrategy: create
+
+class KafkaConsumer {
+    +void DispatchMessages()
+}
+KafkaConsumer --> CommandHandler: use
+KafkaConsumer --> Message: use
+
+class CommandHandler {
+    +void Execute(Command)
+}
+CommandHandler --> ICommandStrategy: use
+CommandHandler --> KafkaProducer: use
+
+class KafkaProducer {
+    +void Send(Result)
+}
+KafkaProducer --> Result: use
+
+@enduml

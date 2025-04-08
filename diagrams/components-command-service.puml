@@ -1,0 +1,47 @@
+@startuml
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(customer, "Клиент", "Управляет умным домом. Сам подключает новые устройства")
+Person(support, "Специалист тех.поддержки", "Оказывает поддержку пользователям")
+
+System_Boundary(warmhouse, "Темплый дом"){
+    Container(customerapp, "Пользовательское веб-приложение", "JavaScript, React")
+    Container(supportapp, "Веб-приложение для специалистов", "JavaScript, React")
+
+    Container(gateway, "API Gateway", "Kong", "Маршрутизация запросов, аутентификация и авторизация")
+    
+    Container(deviceService, "Сервис устройств", "Java, Spring Boot", "Управление устройствами")
+    ContainerDb(deviceDb, "База данных подключенных устройств", "MongoDB")
+
+    Container_Boundary(commandHandlerService, "Сервис исполнения команд", "Java, Spring Boot", "Отправка команд устройствам, прием данных с устройств"){
+        Component(CommandHandler, "CommandHandler", "", "Выполнение команд")
+        Component(KafkaProducer, "KafkaProducer", "",  "Отправка результатов выполнения команд")
+        Component(KafkaConsumer, "KafkaConsumer", "",  "Получение команд для выполнения")
+    }
+    ContainerQueue(kafka, "Брокер сообщений", "Kafka")
+}
+
+Container_Ext(device, "Устройства умного дома")
+
+Rel(customer, customerapp, "Использует")
+Rel(support, supportapp, "Использует")
+
+Rel(customerapp, gateway, "Запрос к системе", "HTTPS")
+Rel(supportapp, gateway, "Запрос к системе", "HTTPS")
+
+Rel(gateway, deviceService, "Привязка нового устройства, получение информации с устройства", "HTTPS")
+Rel(deviceService, deviceDb, "")
+
+Rel(kafka, deviceService, "Уведомления о результатах выполнения команд")
+Rel(deviceService, kafka, "Отправка команд устройствам")
+
+Rel(KafkaConsumer, kafka, "Получение команд для выполнения")
+Rel(KafkaConsumer, CommandHandler, "")
+
+Rel(CommandHandler, KafkaProducer, "")
+Rel(KafkaProducer, kafka, "Результаты выполнения команды")
+
+Rel(CommandHandler, device, "Взаимодействие с устройствами", "HTTPS")
+
+@enduml

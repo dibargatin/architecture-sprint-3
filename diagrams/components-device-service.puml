@@ -1,0 +1,50 @@
+@startuml
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(customer, "Клиент", "Управляет умным домом. Сам подключает новые устройства")
+Person(support, "Специалист тех.поддержки", "Оказывает поддержку пользователям")
+
+System_Boundary(warmhouse, "Темплый дом"){
+    Container(customerapp, "Пользовательское веб-приложение", "JavaScript, React")
+    Container(supportapp, "Веб-приложение для специалистов", "JavaScript, React")
+
+    Container(gateway, "API Gateway", "Kong", "Маршрутизация запросов, аутентификация и авторизация")
+    
+    Container_Boundary(deviceService, "Сервис устройств", "Java, Spring Boot", "Управление устройствами") {
+        Component(ApiController, "ApiController", "", "Обработка запросов на управление устройствами")
+        Component(DeviceManager, "DeviceManager", "", "Управление устройствами")
+        Component(KafkaProducer, "KafkaProducer", "",  "Отправка команд")
+        Component(KafkaConsumer, "KafkaConsumer", "",  "Обработка событий о результатах выполнения команд")
+        Component(Repository, "Repository","",  "Взаимодействие с БД")
+    }
+    ContainerDb(deviceDb, "База данных подключенных устройств", "MongoDB")
+
+    Container(commandHandlerService, "Сервис исполнения команд", "Java, Spring Boot", "Отправка команд устройствам, прием данных с устройств")
+    ContainerQueue(kafka, "Брокер сообщений", "Kafka")
+}
+
+Container_Ext(device, "Устройства умного дома")
+
+Rel(customer, customerapp, "Использует")
+Rel(support, supportapp, "Использует")
+
+Rel(customerapp, gateway, "Запрос к системе", "HTTPS")
+Rel(supportapp, gateway, "Запрос к системе", "HTTPS")
+
+Rel(gateway, ApiController, "Привязка нового устройства, получение информации с устройства, отправка команд", "HTTPS")
+Rel(ApiController, DeviceManager, "")
+Rel(KafkaConsumer, DeviceManager, "")
+
+Rel(kafka, KafkaConsumer, "Уведомления о результатах выполнения команд")
+Rel(KafkaProducer, kafka, "Отправка команд устройствам")
+Rel(DeviceManager, KafkaProducer, "")
+Rel(DeviceManager, Repository, "")
+Rel(Repository, deviceDb, "")
+
+Rel(commandHandlerService, kafka, "Получение команд для выполнения")
+Rel(commandHandlerService, kafka, "Результаты выполнения команды")
+
+Rel(commandHandlerService, device, "Взаимодействие с устройствами", "HTTPS")
+
+@enduml
