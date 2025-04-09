@@ -1,0 +1,55 @@
+@startuml
+
+skinparam linetype ortho
+
+entity User {
+    * id : uuid <<PK>>
+    --
+    * email : varchar(255) <<unique>>
+    * password_hash : varchar(255)
+    * name : varchar(100)
+}
+
+entity House {
+    * id : uuid <<PK>>
+    --
+    * user_id : uuid <<FK>>
+    * name : varchar(100)
+    address : text
+}
+
+entity DeviceType {
+    * id : uuid <<PK>>
+    --
+    * api_protocol : json
+    * name : varchar(100)
+    description : text
+}
+
+entity Device {
+    * id : uuid <<PK>>
+    --
+    * house_id : uuid <<FK>>
+    * type_id : uuid <<FK>>
+    * name : varchar(100)
+    * uri : varchar(255) <<unique>>
+    serial_number : varchar(100) <<unique>>
+    status : enum(online,offline)
+    configuration : json
+}
+
+entity TelemetryData {
+    * id : uuid <<PK>>
+    --
+    * device_id : uuid <<FK>>
+    * created_at : timestamp
+    * type : varchar(100)
+    * value : json
+}
+
+User ||--o{ House : "1:N"
+House ||--o{ Device : "1:N"
+DeviceType ||--o{ Device : "1:N"
+Device ||--o{ TelemetryData : "1:N"
+
+@enduml
