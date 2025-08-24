@@ -1,0 +1,37 @@
+@startuml
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(customer, "Клиент", "Управляет умным домом. Сам подключает новые устройства")
+Person(support, "Специалист тех.поддержки", "Оказывает поддержку пользователям")
+
+System_Boundary(warmhouse, "Темплый дом"){
+    Container(customerapp, "Пользовательское веб-приложение", "JavaScript, React")
+    Container(supportapp, "Веб-приложение для специалистов", "JavaScript, React")
+
+    Container(gateway, "API Gateway", "Kong", "Маршрутизация запросов, аутентификация и авторизация")
+    
+    Container_Boundary(userService, "Сервис пользователей", "Java, Spring Boot", "Управление пользователями"){
+        Component(UserController, "UserController","",  "Обработка запросов")
+        Component(UserService, "UserService","",  "Управление данными пользователей")
+        Component(Repository, "Repository","",  "Взаимодействие с БД")
+    }
+    ContainerDb(userDb, "База данных профилей пользователей", "MongoDB")    
+}
+
+Rel(customer, customerapp, "Использует")
+Rel(support, supportapp, "Использует")
+
+Rel(customerapp, gateway, "Запрос к системе", "HTTPS")
+Rel(supportapp, gateway, "Запрос к системе", "HTTPS")
+
+Rel(gateway, UserController, "Запрос данных пользователя")
+Rel(gateway, UserController, "Редактирование профиля")
+
+Rel(UserController, UserService, "Запрос данных пользователя")
+Rel(UserController, UserService, "Обновление данных пользователя")
+
+Rel(UserService, Repository, "")
+Rel(Repository, userDb, "Чтение/запись")
+
+@enduml

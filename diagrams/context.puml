@@ -1,0 +1,21 @@
+@startuml
+
+title Текущее решение «Тёплый дом»
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(customer, "Клиент", "Управляет отоплением в своем доме и проверяет температуру")
+Person(admin, "Специалист по подключению", "Подключает устройства клиентов к системе")
+System(server, "Приложение «Тёплый дом»", "Система управления и мониторинга отопления")
+
+System_Ext(relay, "Реле для управления отоплением")
+System_Ext(sensor, "Датчик температуры")
+
+Rel(customer, server, "Управляет отоплением и мониторит температуру")
+Rel(admin, server, "Подключает устройства к системе")
+Rel(server, relay, "Отправляет управляющие команды")
+Rel(server, sensor, "Запрашивает температуру")
+
+@enduml
